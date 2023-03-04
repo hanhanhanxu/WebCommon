@@ -1,0 +1,83 @@
+<configuration debug="true">
+    <jmxConfigurator/>
+
+    <!--关闭一般的定时轮训检查日志-->
+    <!--<logger name="com.ppdai.job.core.thread.ExecutorRegistryThread" level="WARN"/>-->
+    <!--日志级别-->
+    <logger name="xyr.riun.webcommon" level="INFO"/>
+
+    <!--打印sql-->
+    <logger name="xyr.riun.webcommon.mapper" level="DEBUG"/>
+
+    <!-- 根据需要自行决定要不要加入，打到console控制台，可选，（容器云Stargate 界面日志按钮若想看到日志则需要配置ConsoleAppender ）-->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%date [traceId:%X{RequestId}] [%thread] %-5level %logger{80}- %msg%n</pattern>
+        </layout>
+    </appender>
+
+    <!--添加contextListener参数，配合ttl实现池类线程复用时内部RequestId变量的传递-->
+    <contextListener class="com.ofpay.logback.TtlMdcListener"/>
+
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./log/info.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>info</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>./log/info-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>50MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <MaxHistory>10</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [traceId:%X{RequestId}] [%thread] [%level] %logger:%L x:\(%X\) - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- 加入框架组件 KafkaAppender，必选 -->
+    <!--<appender name="KafkaAppender" class="com.ppdai.logclient.logback.KafkaAppender">
+        <layout>
+            <pattern>%d{HH:mm:ss.SSS} [%X{RequestId}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </layout>
+        <topic>framework.log</topic>
+        <reportTopic>framework.metric</reportTopic>
+        <appId>1000004251</appId>
+        <manualStart>true</manualStart>
+    </appender>-->
+
+
+    <!-- 在不同环境中引入不同的Appender -->
+    <!-- 1. dev, fat, uat, pre, pro 名字不能错，如不能写成 prd，prod（prd,prod在Stargate容器云中不生效） -->
+    <!-- 2. 若想使dev,fat，uat,pre,pro 生效，pom必须配置 microservice-starter-apollo 依赖 -->
+    <!-- 3. microservice-starter-apollo 依赖默认会绑定kafka的各个环境集群地址（在Apollo中已配置各个环境kafka），移动借出，移动借入 有单独的kafka地址，请联系部门负责人覆盖 Apollo相应配置 -->
+    <springProfile name="dev,fat,uat">
+        <root>
+            <level value="info"/>
+            <appender-ref ref="stdout"/>
+            <appender-ref ref="file"/>
+            <!-- 引入框架组件 KafkaAppender -->
+            <!--<appender-ref ref="KafkaAppender"/>-->
+        </root>
+    </springProfile>
+    <springProfile name="pre">
+        <root>
+            <level value="info"/>
+            <appender-ref ref="stdout"/>
+            <appender-ref ref="file"/>
+            <!--<appender-ref ref="KafkaAppender"/>-->
+        </root>
+    </springProfile>
+
+    <springProfile name="pro">
+        <root>
+            <level value="info"/>
+            <appender-ref ref="stdout"/>
+            <!--<appender-ref ref="KafkaAppender"/>-->
+        </root>
+    </springProfile>
+
+</configuration>
