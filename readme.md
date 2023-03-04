@@ -1,9 +1,12 @@
 web项目基础框架：
+
 1、controller统一返回体：在方法上添加@ResultUnite注解，即可统一返回体。例如，业务返回：ok，包装统一返回体后：
 {"code":200,"msg":"success","data":"ok"}
 
+
 2、统一异常处理，任何异常都会被统一异常处理器：GlobalExceptionHandle 拦截处理，包装成统一返回体。例如业务运行时发生异常，返回：
 {"code":500,"msg":"服务器异常","data":null}
+
 
 3、日志全链路记录 traceId，请求进来时生成唯一id在整个调用链路的日志中记录，并记录在响应头的RequestId字段。通过该字段可以知道请求的所有行为，例如：
 2023-03-03 09:47:10,592 [traceId:Nmyk5XOg3oEZIyyldY] [http-nio-8080-exec-6] INFO  com.example.webmaas.config.LogAspect- 外层请求类名: com.example.webmaas.controller.HsController
